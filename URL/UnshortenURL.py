@@ -15,12 +15,10 @@ def read_info_from_csv(file_name, column_index, nrows=None):
 
     with open(file_name, 'r', encoding='utf-8', errors='ignore') as inputFile:
         reader = csv.reader(inputFile)
-        #next(reader)
+        next(reader)
         cur_rows = 0
         for row in reader:
             print(cur_rows)
-            if(len(row)<=1):
-                continue
             result.append(row[column_index])
             cur_rows += 1
             if nrows == cur_rows:
@@ -40,7 +38,10 @@ def to_csv(line, file_name, is_append):
 def unshorten_url(url):
     result = []
     result.append(url)
-    if(url[-1]=="."):
+    last_letter=url[-1]
+    if(last_letter.isalpha() or last_letter.isdigit()):
+        url=url
+    else:
         url=url[:-1]
     try:
         session = requests.Session()  # so connections are recycled
@@ -54,9 +55,9 @@ def unshorten_url(url):
 
 
 if __name__ == '__main__':
-    output_file_name = "hyperlink_result.csv"
-    input_file_name = "hyperlink.csv"
-    input_user_infos = read_info_from_csv(input_file_name, 2)
+    output_file_name = "fix_result.csv"
+    input_file_name = "fix.csv"
+    input_user_infos = read_info_from_csv(input_file_name, 0)
     existing_user_infos_in_output = read_info_from_csv(output_file_name, 0)
     print("-------")
     if (len(existing_user_infos_in_output) <= 0):
