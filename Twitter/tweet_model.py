@@ -18,6 +18,23 @@ class CompanyRecord:
         self.total_follower = None
         self.total_following = None
         self.first_tweet_date = None
+        self.company_twitter_date_actual = None
+
+    def to_dict(self):
+        result_dict={}
+        result_dict["handID"]=self.hand_id
+        result_dict["CONAME"] = self.coname
+        result_dict["gvkey"] = self.gv_key
+        result_dict["Company_twitter"] = self.company_screen_name
+        result_dict["Company_type"] = self.company_type
+        result_dict["Company_twitter_date"] = self.company_twitter_date
+        result_dict["TWITTER_ACCOUNT_ID"] = self.company_tweet_accound_id
+        result_dict["Number_following"] = self.total_following
+        result_dict["Number_follower"] = self.total_follower
+        result_dict["total_tweet"] = self.total_tweet
+        result_dict["first_tweet_date"] = self.first_tweet_date
+        result_dict["Company_twitter_date_actual"] = self.company_twitter_date_actual
+        return result_dict
 
     @classmethod
     def parse_dict(cls, dict_data):
@@ -75,15 +92,15 @@ class TweetRecord:
         tweet_record.tweet_id = dict_data["Tweet_id_str"]
         tweet_record.tweet_time = parse(dict_data["Tweet_time"])
         tweet_record.tweet_text = dict_data["Tweet_text"]
-        tweet_record.total_likes = dict_data[""]
-        tweet_record.total_retweets = dict_data[""]
-        tweet_record.is_a_reply = dict_data[""]
-        tweet_record.reply_tweet_id = dict_data[""]
-        tweet_record.reply_tweet_text = dict_data[""]
-        tweet_record.is_a_retweet = dict_data[""]
-        tweet_record.retweet_id = dict_data[""]
-        tweet_record.is_a_quote = dict_data[""]
-        tweet_record.quote_tweet_id = dict_data[""]
+        tweet_record.total_likes = dict_data["likes"]
+        tweet_record.total_retweets = dict_data["retweets"]
+        tweet_record.is_a_reply = dict_data["Is a reply"]
+        tweet_record.reply_tweet_id = dict_data["reply_tweet_id"]
+        tweet_record.reply_tweet_text = dict_data["reply_tweet_text"]
+        tweet_record.is_a_retweet = dict_data["Is a retweet"]
+        tweet_record.retweet_id = dict_data["retweet_tweet_id"]
+        tweet_record.is_a_quote = dict_data["Is a quote"]
+        tweet_record.quote_tweet_id = dict_data["quote_tweet_id"]
         if tweet_record.tweet_text is not None:
             tweet_words = tweet_record.tweet_text.split()
             tweet_record.total_word = len(tweet_words)

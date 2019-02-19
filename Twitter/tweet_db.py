@@ -9,7 +9,7 @@ from .tweet_model import TweetRecord
 
 
 class SqlLiteHelper:
-    db_filename = 'todo.db'
+    db_filename = 'twitter_tina.db'
     schema_filename = 'tweet_schema.sql'
     db_is_new = not os.path.exists(db_filename)
 
@@ -28,12 +28,12 @@ class SqlLiteHelper:
         hand_id, coname, gv_key,
         company_screen_name, company_tweet_account_id, company_type,
         company_twitter_date, total_tweet, total_follower,
-        total_following, first_tweet_date
+        total_following, first_tweet_date, company_twitter_date_actual
         ) values (
         ?, ?, ?,
+        ?,?,?,
+        ?,?,?,
         ?,?,?
-        ?,?,?
-        ?,?
         )"""
         if (cls.db_is_new):
             cls.create_schema()
@@ -47,7 +47,7 @@ class SqlLiteHelper:
                                          company_record.company_twitter_date,
                                          company_record.total_tweet, company_record.total_follower,
                                          company_record.total_following,
-                                         company_record.first_tweet_date))
+                                         company_record.first_tweet_date, company_record.company_twitter_date_actual))
             cur.execute('commit')
 
     @classmethod
@@ -63,8 +63,8 @@ class SqlLiteHelper:
         total_word, is_earnings_related, is_investor_related, tone_analysis
         ) values (
         ?, ?, ?,
-        ?,?,?
-        ?,?,?
+        ?,?,?,
+        ?,?,?,
         ?,?,?,
         ?,?,
         ?,?,?,

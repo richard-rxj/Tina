@@ -2,14 +2,15 @@ create table company_record (
     hand_id      text,
     coname      text,
     gv_key   text,
-    company_screen_name  text,
+    company_screen_name  text primary key,
     company_tweet_account_id text,
     company_type  text,
     company_twitter_date date,
     total_tweet integer,
     total_follower integer,
     total_following integer,
-    first_tweet_date date
+    first_tweet_date date,
+    company_twitter_date_actual date
 );
 
 create table tweet_record (
@@ -22,7 +23,7 @@ create table tweet_record (
     company_twitter_date date,
     total_follower integer,
     total_following integer,
-    tweet_id text,
+    tweet_id text primary key,
     tweet_time date,
     tweet_text text,
     total_likes integer,
