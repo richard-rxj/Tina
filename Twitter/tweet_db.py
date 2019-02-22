@@ -24,9 +24,9 @@ class SqlLiteHelper:
 
     @classmethod
     def save_company_record(cls, company_records):
-        insert_sql = """ insert into company_record (
-        hand_id, coname, gv_key,
-        company_screen_name, company_tweet_account_id, company_type,
+        insert_sql = """ replace into company_record (
+        company_screen_name, hand_id, coname, gv_key,
+         company_tweet_account_id, company_type,
         company_twitter_date, total_tweet, total_follower,
         total_following, first_tweet_date, company_twitter_date_actual
         ) values (
@@ -41,8 +41,8 @@ class SqlLiteHelper:
             cur = conn.cursor()
             cur.execute('begin transaction')
             for company_record in company_records:
-                cur.execute(insert_sql, (company_record.hand_id, company_record.coname, company_record.gv_key,
-                                         company_record.company_screen_name,
+                cur.execute(insert_sql, (company_record.company_screen_name,
+                                         company_record.hand_id, company_record.coname, company_record.gv_key,
                                          company_record.company_tweet_accound_id, company_record.company_type,
                                          company_record.company_twitter_date,
                                          company_record.total_tweet, company_record.total_follower,
@@ -93,6 +93,38 @@ class SqlLiteHelper:
                                          tweet_record.total_word, tweet_record.is_earnings_related,
                                          tweet_record.is_investor_related, tweet_record.tone_analysis))
             cur.execute('commit')
+
+    @classmethod
+    def get_all_company_records(cls):
+        company_records = []
+        sql_script = """
+        select hand_id, coname, gv_key, 
+        company_screen_name, company_tweet_account_id,
+        company_type, company_twitter_date,
+        total_tweet, total_follower, total_following,
+        first_tweet_date, company_twitter_date_actual
+        from company_record
+        """
+        with sqlite3.connect(cls.db_filename) as conn:
+            cursor = conn.cursor()
+            cursor.execute(sql_script)
+            for row in cursor:
+                hand_id, coname, gv_key, company_screen_name, company_tweet_account_id, company_type, company_twitter_date, total_tweet, total_follower, total_following, first_tweet_date, company_twitter_date_actual = row
+                company_record = CompanyRecord()
+                company_record.hand_id=hand_id
+                company_record.coname=coname
+                company_record.gv_key=gv_key
+                company_record.company_screen_name=company_screen_name
+                company_record.company_tweet_accound_id=company_tweet_account_id
+                company_record.company_type=company_type
+                company_record.company_twitter_date=company_twitter_date
+                company_record.total_tweet=total_tweet
+                company_record.total_follower=total_follower
+                company_record.total_following=total_following
+                company_record.first_tweet_date=first_tweet_date
+                company_record.company_twitter_date_actual=company_twitter_date_actual
+                company_records.append(company_record)
+        return company_records
 
 
 if __name__ == '__main__':

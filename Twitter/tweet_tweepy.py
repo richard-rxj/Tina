@@ -1,5 +1,7 @@
 import tweepy
 import time
+from dateutil.parser import parse
+
 
 class TweepyHelper:
     # Twitter API credentials, removed due to privacy concerns, needs to be replaced when use. Note these keys can be applied via any twitter account
@@ -22,7 +24,7 @@ class TweepyHelper:
                      "sustainability",
                      "tech report", "tender offer"]
 
-    sleep_time = 1000
+    sleep_time = 60
 
     auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
     auth.set_access_token(access_key, access_secret)
@@ -42,7 +44,7 @@ class TweepyHelper:
         except:
             return ""
 
-    def get_tweet_info(screen_name):
+    def get_tweet_info(screen_name, company_record=None):
         result = []
         try:
             user_screen_name = TweepyHelper.api.get_user(screen_name)
@@ -50,21 +52,25 @@ class TweepyHelper:
             if user_screen_name.protected == True:
                 print("%s do not authorize to access his/her account" % screen_name)
                 result.append("do not authorize to access his/her account")
+                if company_record is not None:
+                    company_record.other_comment = "do not authorize to access his/her account"
                 return result
         except tweepy.error.TweepError as e:
-            if e.api_code == 88:
+            if "Rate limit" in e.reason:
                 loop_flag = True
                 while loop_flag:
                     print("Rate limit reached. Sleeping")
                     time.sleep(TweepyHelper.sleep_time)
                     try:
                         user_screen_name = TweepyHelper.api.get_user(screen_name)
-                    except tweepy.TweepError as e2:
-                        if e.api_code == 88: continue
+                    except tweepy.error.TweepError as e2:
+                        if "Rate limit" in e2.reason: continue
                     loop_flag = False
             else:
                 print(e)
                 result.append(str(e))
+                if company_record is not None:
+                    company_record.other_comment = str(e)
                 return result
 
         if user_screen_name is None:
@@ -75,8 +81,17 @@ class TweepyHelper:
         result.append(TweepyHelper.trans_long_digit(user_id))
         result.append(str(num_followers))
         result.append(str(num_following))
-        return result
 
+        if company_record is not None:
+            try:
+                company_record.company_tweet_accound_id = TweepyHelper.trans_long_digit(user_id)
+                company_record.total_following = num_following
+                company_record.total_follower = num_followers
+                company_record.company_twitter_date_actual=parse(str(user_screen_name.created_at))
+                company_record.total_tweet_actual=user_screen_name.statuses_count
+            except ValueError:
+                print(company_record.company_screen_name)
+        return result
 
     def get_alltweets_by_user(screen_name):
         all_tweets = []
@@ -111,7 +126,8 @@ class TweepyHelper:
                         print("Rate limit reached. Sleeping")
                         time.sleep(TweepyHelper.sleep_time)
                         try:
-                            temp_tweets.extend(TweepyHelper.api.user_timeline(screen_name=screen_name, count=200, max_id=oldest_id))
+                            temp_tweets.extend(
+                                TweepyHelper.api.user_timeline(screen_name=screen_name, count=200, max_id=oldest_id))
                         except tweepy.TweepError as e2:
                             if e.api_code == 88:
                                 continue
@@ -133,8 +149,10 @@ class TweepyHelper:
                 original_quote_id = single_tweet.quoted_status.id_str
             single_output = [TweepyHelper.trans_long_digit(single_tweet.id_str), single_tweet.created_at,
                              single_tweet.text.encode("utf-8"),
-                             single_tweet.favorite_count, single_tweet.retweet_count, single_tweet.in_reply_to_screen_name,
-                             TweepyHelper.trans_long_digit(single_tweet.in_reply_to_status_id_str), reply_tweet_text, is_retweet,
+                             single_tweet.favorite_count, single_tweet.retweet_count,
+                             single_tweet.in_reply_to_screen_name,
+                             TweepyHelper.trans_long_digit(single_tweet.in_reply_to_status_id_str), reply_tweet_text,
+                             is_retweet,
                              TweepyHelper.trans_long_digit(original_retweet_id), is_quote,
                              TweepyHelper.trans_long_digit(original_quote_id)];
             result.append(single_output)
@@ -146,6 +164,7 @@ class TweepyHelper:
             return input
         else:
             return "'" + inputStr
+
 
 if __name__ == '__main__':
     pass

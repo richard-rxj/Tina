@@ -11,6 +11,8 @@ create table company_record (
     total_following integer,
     first_tweet_date date,
     company_twitter_date_actual date
+    last_tweet_date date,
+    other_comment text
 );
 
 create table tweet_record (
