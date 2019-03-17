@@ -14,6 +14,11 @@ class SqlLiteHelper:
     db_is_new = not os.path.exists(db_filename)
 
     @classmethod
+    def set_db_file(cls, db_filename):
+        cls.db_filename = db_filename
+        cls.db_is_new = not os.path.exists(db_filename)
+
+    @classmethod
     def create_schema(cls):
         with sqlite3.connect(cls.db_filename) as conn:
             print('Creating schema')
@@ -28,9 +33,11 @@ class SqlLiteHelper:
         company_screen_name, hand_id, coname, gv_key,
          company_tweet_account_id, company_type,
         company_twitter_date, total_tweet, total_follower,
-        total_following, first_tweet_date, company_twitter_date_actual
+        total_following, first_tweet_date, company_twitter_date_actual, 
+        total_tweet_actual,other_comment, last_tweet_date
         ) values (
         ?, ?, ?,
+        ?,?,?,
         ?,?,?,
         ?,?,?,
         ?,?,?
@@ -47,12 +54,14 @@ class SqlLiteHelper:
                                          company_record.company_twitter_date,
                                          company_record.total_tweet, company_record.total_follower,
                                          company_record.total_following,
-                                         company_record.first_tweet_date, company_record.company_twitter_date_actual))
+                                         company_record.first_tweet_date, company_record.company_twitter_date_actual,
+                                         company_record.total_tweet_actual, company_record.other_comment,
+                                         company_record.last_tweet_date))
             cur.execute('commit')
 
     @classmethod
     def save_tweet_record(cls, tweet_records):
-        insert_sql = """ insert into tweet_record (
+        insert_sql = """ replace into tweet_record (
         hand_id, coname, gv_key,
         company_screen_name, company_tweet_account_id, company_type,
         company_twitter_date, total_follower, total_following,
@@ -60,7 +69,8 @@ class SqlLiteHelper:
         total_likes, total_retweets, 
         is_a_reply, reply_tweet_id, reply_tweet_text,
         is_a_retweet, retweet_id, is_a_quote, quote_tweet_id,
-        total_word, is_earnings_related, is_investor_related, tone_analysis
+        total_word, is_earnings_related, is_investor_related,
+        polarity_score, subjectivity_score
         ) values (
         ?, ?, ?,
         ?,?,?,
@@ -69,7 +79,8 @@ class SqlLiteHelper:
         ?,?,
         ?,?,?,
         ?,?,?,?,
-        ?,?,?,?
+        ?,?,?,
+        ?,?
         )"""
         if (cls.db_is_new):
             cls.create_schema()
@@ -91,7 +102,8 @@ class SqlLiteHelper:
                                          tweet_record.is_a_retweet, tweet_record.retweet_id,
                                          tweet_record.is_a_quote, tweet_record.quote_tweet_id,
                                          tweet_record.total_word, tweet_record.is_earnings_related,
-                                         tweet_record.is_investor_related, tweet_record.tone_analysis))
+                                         tweet_record.is_investor_related,
+                                         tweet_record.polarity_score, tweet_record.subjectivity_score))
             cur.execute('commit')
 
     @classmethod
@@ -111,20 +123,58 @@ class SqlLiteHelper:
             for row in cursor:
                 hand_id, coname, gv_key, company_screen_name, company_tweet_account_id, company_type, company_twitter_date, total_tweet, total_follower, total_following, first_tweet_date, company_twitter_date_actual = row
                 company_record = CompanyRecord()
-                company_record.hand_id=hand_id
-                company_record.coname=coname
-                company_record.gv_key=gv_key
-                company_record.company_screen_name=company_screen_name
-                company_record.company_tweet_accound_id=company_tweet_account_id
-                company_record.company_type=company_type
-                company_record.company_twitter_date=company_twitter_date
-                company_record.total_tweet=total_tweet
-                company_record.total_follower=total_follower
-                company_record.total_following=total_following
-                company_record.first_tweet_date=first_tweet_date
-                company_record.company_twitter_date_actual=company_twitter_date_actual
+                company_record.hand_id = hand_id
+                company_record.coname = coname
+                company_record.gv_key = gv_key
+                company_record.company_screen_name = company_screen_name
+                company_record.company_tweet_accound_id = company_tweet_account_id
+                company_record.company_type = company_type
+                company_record.company_twitter_date = company_twitter_date
+                company_record.total_tweet = total_tweet
+                company_record.total_follower = total_follower
+                company_record.total_following = total_following
+                company_record.first_tweet_date = first_tweet_date
+                company_record.company_twitter_date_actual = company_twitter_date_actual
                 company_records.append(company_record)
         return company_records
+
+    # @classmethod
+    # def get_tweet_records_by_screen_name(cls, screen_name=None):
+    #     tweet_records = []
+    #     sql_script = """
+    #             select hand_id, coname, gv_key,
+    #             company_screen_name, company_tweet_account_id, company_type,
+    #     company_twitter_date, total_follower, total_following,
+    #     tweet_id, tweet_time, tweet_text,
+    #     total_likes, total_retweets,
+    #     is_a_reply, reply_tweet_id, reply_tweet_text,
+    #     is_a_retweet, retweet_id, is_a_quote, quote_tweet_id,
+    #     total_word, is_earnings_related, is_investor_related, tone_analysis
+    #             from tweet_record
+    #             """
+    #     if screen_name is not None:
+    #         sql_script = sql_script + "where company_screen_name ='" + screen_name + "'"
+    #     with sqlite3.connect(cls.db_filename) as conn:
+    #         cursor = conn.cursor()
+    #         cursor.execute(sql_script)
+    #         for row in cursor:
+    #             hand_id, coname, gv_key, company_screen_name, company_tweet_account_id, company_type, company_twitter_date, \
+    #             total_follower, total_following, first_tweet_date, company_twitter_date_actual = row
+    #             tweet_record = TweetRecord()
+    #             tweet_record.hand_id = hand_id
+    #             tweet_record.coname = coname
+    #             tweet_record.gv_key = gv_key
+    #             tweet_record.company_screen_name = company_screen_name
+    #             tweet_record.company_tweet_accound_id = company_tweet_account_id
+    #             tweet_record.company_type = company_type
+    #             tweet_record.company_twitter_date = company_twitter_date
+    #             tweet_record.total_tweet = total_tweet
+    #             tweet_record.total_follower = total_follower
+    #             tweet_record.total_following = total_following
+    #             tweet_record.first_tweet_date = first_tweet_date
+    #             tweet_record.company_twitter_date_actual = company_twitter_date_actual
+    #             tweet_records.append(tweet_record)
+    #     return tweet_records
 
 
 if __name__ == '__main__':

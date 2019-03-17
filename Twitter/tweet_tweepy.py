@@ -44,7 +44,7 @@ class TweepyHelper:
         except:
             return ""
 
-    def get_tweet_info(screen_name, company_record=None):
+    def get_tweet_user_info(screen_name, company_record=None):
         result = []
         try:
             user_screen_name = TweepyHelper.api.get_user(screen_name)

@@ -7,10 +7,11 @@ create table company_record (
     company_type  text,
     company_twitter_date date,
     total_tweet integer,
+    total_tweet_actual integer,
     total_follower integer,
     total_following integer,
     first_tweet_date date,
-    company_twitter_date_actual date
+    company_twitter_date_actual date,
     last_tweet_date date,
     other_comment text
 );
@@ -40,5 +41,6 @@ create table tweet_record (
     total_word integer,
     is_earnings_related text,
     is_investor_related text,
-    tone_analysis text
+    polarity_score text,
+    subjectivity_score text
 );

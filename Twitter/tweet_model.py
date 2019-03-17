@@ -39,8 +39,8 @@ class CompanyRecord:
         result_dict["first_tweet_date"] = self.first_tweet_date
         result_dict["Company_twitter_date_actual"] = self.company_twitter_date_actual
         result_dict["last_tweet_date"] = self.last_tweet_date
-        result_dict["total_tweet_actual"]=self.total_tweet_actual
-        result_dict["other_comment"]=self.other_comment
+        result_dict["total_tweet_actual"] = self.total_tweet_actual
+        result_dict["other_comment"] = self.other_comment
         return result_dict
 
     @classmethod
@@ -53,7 +53,10 @@ class CompanyRecord:
             company_record.company_screen_name = dict_data["Company_twitter"]
             if company_record.company_screen_name is not None:
                 company_record.company_type = dict_data["Company_type"]
-                company_record.company_twitter_date = parse(dict_data["Company_twitter_date"])
+                if "Company_twitter_date" in dict_data and dict_data["Company_twitter_date"] is not None:
+                    company_record.company_twitter_date = parse(dict_data["Company_twitter_date"])
+                if "Company_twitter_date_actual" in dict_data and dict_data["Company_twitter_date_actual"] is not None:
+                    company_record.company_twitter_date_actual = parse(dict_data["Company_twitter_date_actual"])
                 if "TWITTER_ACCOUNT_ID" in dict_data:
                     company_record.company_tweet_accound_id = dict_data["TWITTER_ACCOUNT_ID"]
                 if "Number_following" in dict_data:
@@ -65,9 +68,21 @@ class CompanyRecord:
                 else:
                     company_record.total_tweet = 0
                 if "first_tweet_date" in dict_data:
-                    company_record.first_tweet_date = dict_data["firt_tweet_date"]
+                    company_record.first_tweet_date = dict_data["first_tweet_date"]
                 else:
                     company_record.first_tweet_date = None
+                if "last_tweet_date" in dict_data:
+                    company_record.last_tweet_date = dict_data["last_tweet_date"]
+                else:
+                    company_record.last_tweet_date = None
+                if "total_tweet_actual" in dict_data:
+                    company_record.total_tweet_actual = dict_data["total_tweet_actual"]
+                else:
+                    company_record.total_tweet_actual = None
+                if "other_comment" in dict_data:
+                    company_record.other_comment = dict_data["other_comment"]
+                else:
+                    company_record.other_comment = None
         except ValueError:
             print(dict_data)
         return company_record
@@ -107,14 +122,16 @@ class TweetRecord:
         self.total_word = None
         self.is_earnings_related = None
         self.is_investor_related = None
-        self.tone_analysis = None
+        self.polarity_score = None
+        self.subjectivity_score = None
 
     @classmethod
     def parse_dict(cls, dict_data):
         tweet_record = TweetRecord()
-        tweet_record.company_record = None
+        tweet_record.company_record = CompanyRecord.parse_dict(dict_data)
         tweet_record.tweet_id = dict_data["Tweet_id_str"]
-        tweet_record.tweet_time = parse(dict_data["Tweet_time"])
+        if "Tweet_time" in dict_data and dict_data["Tweet_time"] is not None:
+            tweet_record.tweet_time = parse(dict_data["Tweet_time"])
         tweet_record.tweet_text = dict_data["Tweet_text"]
         tweet_record.total_likes = dict_data["likes"]
         tweet_record.total_retweets = dict_data["retweets"]
@@ -125,18 +142,60 @@ class TweetRecord:
         tweet_record.retweet_id = dict_data["retweet_tweet_id"]
         tweet_record.is_a_quote = dict_data["Is a quote"]
         tweet_record.quote_tweet_id = dict_data["quote_tweet_id"]
+        if "total_word" in dict_data:
+            tweet_record.total_word = dict_data["total_word"]
+        if "is_earnings_related" in dict_data:
+            tweet_record.is_earnings_related = dict_data["is_earnings_related"]
+        if "is_investor_related" in dict_data:
+            tweet_record.is_investor_related = dict_data["is_investor_related"]
+        if "polarity_score" in dict_data:
+            tweet_record.polarity_score = dict_data["polarity_score"]
+        if "subjectivity_score" in dict_data:
+            tweet_record.subjectivity_score = dict_data["subjectivity_score"]
         if tweet_record.tweet_text is not None:
             tweet_words = tweet_record.tweet_text.split()
-            tweet_record.total_word = len(tweet_words)
-            for single_word in tweet_words:
-                if single_word.lower() in cls.EARNINGS_KEYWORDS:
-                    tweet_record.is_earnings_related = True
-                    break
-            for single_word in tweet_words:
-                if single_word.lower() in cls.INVESTOR_KEYWORDS:
-                    tweet_record.is_investor_related = True
-                    break
+            if tweet_record.total_word is None:
+                tweet_record.total_word = len(tweet_words)
+            if tweet_record.is_earnings_related is None:
+                for single_word in tweet_words:
+                    if single_word.lower() in cls.EARNINGS_KEYWORDS:
+                        tweet_record.is_earnings_related = True
+                        break
+            if tweet_record.is_investor_related is None:
+                for single_word in tweet_words:
+                    if single_word.lower() in cls.INVESTOR_KEYWORDS:
+                        tweet_record.is_investor_related = True
+                        break
         return tweet_record
+
+    def to_dict(self):
+        dict_data = {}
+        dict_data["handID"] = self.company_record.hand_id
+        dict_data["CONAME"] = self.company_record.coname
+        dict_data["gvkey"] = self.company_record.gv_key
+        dict_data["Company_twitter"] = self.company_record.company_screen_name
+        dict_data["Company_type"] = self.company_record.company_type
+        dict_data["Company_twitter_date"] = self.company_record.company_twitter_date
+        dict_data["TWITTER_ACCOUNT_ID"] = self.company_record.company_tweet_accound_id
+        dict_data["Number_following"] = self.company_record.total_following
+        dict_data["Number_follower"] = self.company_record.total_follower
+        dict_data["Tweet_id_str"] = self.tweet_id
+        dict_data["Tweet_time"] = self.tweet_time
+        dict_data["Tweet_text"] = self.tweet_text
+        dict_data["likes"] = self.total_likes
+        dict_data["retweets"] = self.total_retweets
+        dict_data["Is a reply"] = self.is_a_reply
+        dict_data["reply_tweet_id"] = self.reply_tweet_id
+        dict_data["reply_tweet_text"] = self.reply_tweet_text
+        dict_data["Is a retweet"] = self.is_a_retweet
+        dict_data["retweet_tweet_id"] = self.retweet_id
+        dict_data["Is a quote"] = self.is_a_quote
+        dict_data["total_word"] = self.total_word
+        dict_data["is_investor_related"] = self.is_investor_related
+        dict_data["is_earnings_related"] = self.is_earnings_related
+        dict_data["polarity_score"] = self.polarity_score
+        dict_data["subjectivity_score"] = self.subjectivity_score
+        return dict_data
 
 
 if __name__ == '__main__':
